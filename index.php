@@ -1,24 +1,34 @@
 <?php
 if(!empty($_GET['sync'])) {
-    $return   = '';
+
     $filename = 'progress';
+    $initial  = FALSE;
     $old_path = getcwd();
+
     chdir(__DIR__);
     set_time_limit(0);
-    SYNCLOOP : {
+
+    while(true) {
+
         sleep(1);
         clearstatcache();
+
         $progress = file_get_contents($filename);
-        if(!$progress) {
+
+        if(!$initial && !$progress) {
+            $initial = TRUE;
             shell_exec('./sync.bash');
-            sleep(5);
+        } elseif(!$progress) {
+            continue;
         } elseif(!($filetime = filemtime($filename)) || $filetime > $_GET['timestamp']) {
             echo json_encode($progress);
             exit;
         }
-        goto SYNCLOOP;
+
     }
+
     chdir($old_path);
+
 }
 ?>
 
